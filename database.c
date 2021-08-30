@@ -32,11 +32,12 @@ enum {
 typedef uint8_t boolean;
 
 void destroy(void);
-boolean removeId(FILE *f, size_t i);
+boolean remove_id(FILE *f, size_t i);
 void print(FILE *f, char c);
 void create(FILE *f, char **argv);
 boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd);
 uint8_t get_cmd(const char **cmds, char *argv);
+size_t get_lines(FILE *f);
 
 int main(int argc,char **argv) 
 {
@@ -61,6 +62,7 @@ boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd)
 	{
 		case CREATE:
 			if (argc < 4) return 1;
+			fprintf(f,"\"%ld\",",get_lines(f));
 			create(f,argv+2);
 			break;	
 		case PRINT:
@@ -68,7 +70,7 @@ boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd)
 			break;	
 		case REMOVE:
 			if (argc < 3) return 1;
-			if (removeId(f,strtol(argv[2],NULL,10))) return 1;
+			if (remove_id(f,strtol(argv[2],NULL,10))) return 1;
 			break;
 		case DESTROY:
 			destroy();
@@ -98,12 +100,9 @@ size_t get_lines(FILE *f)
 	return cnt;
 }
 
-void destroy(void)
-{
-	remove(DB);
-}
+void destroy(void) { remove(DB); }
 
-boolean removeId(FILE *f, size_t i)
+boolean remove_id(FILE *f, size_t i)
 {
 	size_t lines = get_lines(f);
 	if (i > lines) return 1;
@@ -113,26 +112,36 @@ boolean removeId(FILE *f, size_t i)
 
 	rewind(f);
 
-	size_t cnt = 0;
-	char c;
-	while (c != EOF)
+	size_t l=0;
+	char c,aux[5];
+
+	fgets(aux,5,f);
+	while (!feof(f))
 	{		
-		if (c == '\n') cnt++;
-		c = fgetc(f);
-		if (cnt == i) continue;
+		if (c=='\n') 
+		{
+			l++;
+			fgets(aux,5,f);
+		}
+		c=fgetc(f);
+		if (l==i) continue;
 		fputc(c,tmp);
 	}
-
 	rewind(tmp);
-
+	
 	fclose(f);
-	f = fopen(DB,"w");
- 
-	while (1)
+	f=fopen(DB,"w");
+
+	l=0;
+	if ((lines-1)) fprintf(f,"\"%ld\",",l++);
+	while (!feof(tmp))
 	{
-		c = fgetc(tmp);
-		if (c==EOF) break;
+		c=fgetc(tmp);
 		fputc(c,f);
+		if (c=='\n'&&l<(lines-1))
+		{ 
+			fprintf(f,"\"%ld\",",l++);
+		}
 	}
 
 	fclose(tmp);
