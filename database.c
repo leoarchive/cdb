@@ -22,19 +22,14 @@
 
 #define DB "database.csv"
 
-enum {
-	CREATE,
-	PRINT,
-	REMOVE,
-	DESTROY,
-};
+enum {CREATE,PRINT,REMOVE,DESTROY};
 
 typedef uint8_t boolean;
 
-void destroy(void);
-boolean remove_id(FILE *f, size_t i);
-void print(FILE *f, char c);
 void create(FILE *f, char **argv);
+void print(FILE *f, char c);
+boolean remove_id(FILE *f, size_t i);
+void destroy(void);
 boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd);
 uint8_t get_cmd(const char **cmds, char *argv);
 size_t get_lines(FILE *f);
@@ -43,16 +38,15 @@ int main(int argc,char **argv)
 {
 	if (argc < 2) return 1;
 
-	const char *cmds[] = {"-c","-p","-r","-d",NULL};
-
 	FILE *f = fopen(DB,"a+");
 	if (!f) return 1; 
 
 	fflush(stdout);
 
+	const char *cmds[] = {"-c","-p","-r","-d",NULL};
 	boolean r = data_access_object(f,argc,argv,get_cmd(cmds,argv[1]));
 	if (r) return 1;
-		
+
 	return 0;
 }
 
@@ -114,7 +108,6 @@ boolean remove_id(FILE *f, size_t i)
 
 	size_t l=0;
 	char c,aux[5];
-
 	fgets(aux,5,f);
 	while (!feof(f))
 	{		
