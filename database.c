@@ -107,7 +107,7 @@ boolean remove_id(FILE *f, size_t i)
 	size_t l=0;
 	char c,aux[5];
 	fgets(aux,5,f);
-	while (!feof(f))
+	while (1)
 	{		
 		if (c=='\n') 
 		{
@@ -116,6 +116,7 @@ boolean remove_id(FILE *f, size_t i)
 		}
 		c=fgetc(f);
 		if (l==i) continue;
+		if (c==EOF) break;
 		fputc(c,tmp);
 	}
 	rewind(tmp);
@@ -124,9 +125,10 @@ boolean remove_id(FILE *f, size_t i)
 
 	l=0;
 	if ((lines-1)) fprintf(f,"\"%ld\",",l++);
-	while (!feof(tmp))
+	while (1)
 	{
 		c=fgetc(tmp);
+		if (c==EOF) break;
 		fputc(c,f);
 		if (c=='\n'&&l<(lines-1))
 		{ 
