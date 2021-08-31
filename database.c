@@ -99,7 +99,7 @@ void destroy(void) { remove(DB); }
 boolean remove_id(FILE *f, size_t i)
 {
 	size_t lines = get_lines(f);
-	if (i > lines) return 1;
+	if (i > (lines-1)) return 1;
 
 	FILE *tmp = tmpfile();
 	if (!tmp) return 1;
