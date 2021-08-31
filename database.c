@@ -29,7 +29,6 @@ typedef uint8_t boolean;
 void create(FILE *f, char **argv);
 void print(FILE *f, char c);
 boolean remove_id(FILE *f, size_t i);
-void destroy(void);
 boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd);
 uint8_t get_cmd(const char **cmds, char *argv);
 size_t get_lines(FILE *f);
@@ -40,8 +39,6 @@ int main(int argc,char **argv)
 
 	FILE *f = fopen(DB,"a+");
 	if (!f) return 1; 
-
-	fflush(stdout);
 
 	const char *cmds[] = {"-c","-p","-r","-d",NULL};
 	boolean r = data_access_object(f,argc,argv,get_cmd(cmds,argv[1]));
@@ -56,7 +53,9 @@ boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd)
 	{
 		case CREATE:
 			if (argc < 4) return 1;
-			fprintf(f,"\"%ld\",",get_lines(f));
+			size_t i=get_lines(f);
+			if (!i) freopen(DB,"w",f);	
+			fprintf(f,"\"%ld\",",i);
 			create(f,argv+2);
 			break;	
 		case PRINT:
@@ -67,8 +66,9 @@ boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd)
 			if (remove_id(f,strtol(argv[2],NULL,10))) return 1;
 			break;
 		case DESTROY:
-			destroy();
-			break;			
+			fclose(f);
+			remove(DB);
+			return 0;			
 		default: return 1;
 	}
 	fclose(f);	
@@ -94,12 +94,10 @@ size_t get_lines(FILE *f)
 	return cnt;
 }
 
-void destroy(void) { remove(DB); }
-
 boolean remove_id(FILE *f, size_t i)
 {
 	size_t lines = get_lines(f);
-	if (i > (lines-1)) return 1;
+	if (i >= lines) return 1;
 
 	FILE *tmp = tmpfile();
 	if (!tmp) return 1;
@@ -122,8 +120,7 @@ boolean remove_id(FILE *f, size_t i)
 	}
 	rewind(tmp);
 	
-	fclose(f);
-	f=fopen(DB,"w");
+	freopen(DB,"w",f);	
 
 	l=0;
 	if ((lines-1)) fprintf(f,"\"%ld\",",l++);
