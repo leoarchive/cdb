@@ -17,20 +17,16 @@
  */ 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 
 #define DB "database.csv"
 
 enum {CREATE,PRINT,REMOVE,DESTROY};
 
-typedef uint8_t boolean;
-
 void create(FILE *f, char **argv);
 void print(FILE *f, char c);
-boolean remove_id(FILE *f, size_t i);
-boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd);
-uint8_t get_cmd(const char **cmds, char *argv);
+_Bool remove_id(FILE *f, size_t i);
+_Bool data_access_object(FILE *f, int argc, char **argv, size_t cmd);
+size_t get_cmd(const char **cmds, char *argv);
 size_t get_lines(FILE *f);
 
 int main(int argc,char **argv) 
@@ -41,13 +37,13 @@ int main(int argc,char **argv)
 	if (!f) return 1; 
 
 	const char *cmds[] = {"-c","-p","-r","-d",NULL};
-	boolean r = data_access_object(f,argc,argv,get_cmd(cmds,argv[1]));
+	_Bool r = data_access_object(f,argc,argv,get_cmd(cmds,argv[1]));
 	if (r) return 1;
 
 	return 0;
 }
 
-boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd)
+_Bool data_access_object(FILE *f, int argc, char **argv, size_t cmd)
 {
 	switch (cmd) 
 	{
@@ -71,11 +67,12 @@ boolean data_access_object(FILE *f, int argc, char **argv, uint8_t cmd)
 			return 0;			
 		default: return 1;
 	}
+	
 	fclose(f);	
 	return 0;
 }
 
-uint8_t get_cmd(const char **cmds, char *argv)
+size_t get_cmd(const char **cmds, char *argv)
 {
 	if (strcmp(argv,(*cmds))==0) return 0;
 	cmds++;
@@ -86,15 +83,17 @@ size_t get_lines(FILE *f)
 {
 	char c;
 	size_t cnt = 0;
+
 	do
 	{
 		c = fgetc(f);
 		if (c == '\n') cnt++;
 	} while (c != EOF);
+
 	return cnt;
 }
 
-boolean remove_id(FILE *f, size_t i)
+_Bool remove_id(FILE *f, size_t i)
 {
 	size_t lines = get_lines(f);
 	if (i >= lines) return 1;
